@@ -1,0 +1,53 @@
+# ─── Archivo de constraints: Próstata Hipofraccionada ───────────────────────
+# Sintaxis de constraints:
+#   V%{dosis}Gy {op} {threshold}     → % volumen que recibe >= dosis Gy   (op: < o >)
+#   DGy{vol}%   {op} {threshold}     → dosis (Gy) recibida por vol% del volumen
+#   DGy{vol}cc  {op} {threshold}     → dosis (Gy) recibida por vol cc del volumen
+#   Dmean       {op} {threshold}     → dosis media (Gy)
+#   Dmax        {op} {threshold}     → dosis máxima (Gy)
+#
+# Las líneas que empiezan con # son comentarios. Las líneas vacías se ignoran.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─── Prescripción de referencia ───────────────────────────────────────────────
+# Solo para validación y normalización. No sobreescribe los valores del plan.
+[Prescripcion]
+DosisTotal_Gy   = 70.0
+NFracciones     = 28
+
+# ─── Estructuras ──────────────────────────────────────────────────────────────
+# Listar todos los alias posibles separados por coma (case-insensitive).
+[Estructuras]
+PTV     = PTV, PTV_High, PTV_High2, PTV_Abr22, PTVp,PTV_Ptta
+Body    = BODY, body, Body, External, Body1, BODY1
+Rectum  = Rectum, RECTUM, rectum
+Bladder = Bladder, BLADDER, bladder
+
+# ─── Overrides puntuales de PTV por paciente ─────────────────────────────────
+# Para casos donde coexisten dos estructuras con nombre plausible (ej. PTV_High
+# duplicado/incorrecto) y la búsqueda por prioridad de alias no alcanza a
+# distinguir cuál es la real. Clave = HC (no AnonID), valor = Id EXACTO de la
+# estructura correcta en Eclipse. Bypassa la búsqueda por alias para ese paciente.
+[PTV_Overrides]
+1-XXXXXX-0 = PTV_High1
+1-YYYYYY-0 = PTV_Highrecor
+
+# ─── Constraints por estructura ───────────────────────────────────────────────
+# Formato: {Metrica} {op} {valor}
+# El nombre de sección debe coincidir exactamente con el alias principal definido arriba.
+
+[PTV]
+V%70Gy  > 98
+DGy95%  > 70
+
+[Rectum]
+V%65Gy  < 15.0
+V%55Gy  < 25.0
+V%45Gy  < 45.0
+Dmean   < 40.0
+
+[Bladder]
+V%65Gy  < 15.0
+V%55Gy  < 25.0
+V%45Gy  < 45.0
+Dmean   < 40.0

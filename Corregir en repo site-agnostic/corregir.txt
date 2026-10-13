@@ -1,0 +1,3 @@
+Ignore: zring* y zopt*.
+Alias: ptv_high-0.4 y ptv_high!04, hacia el candidato -04. Conviene revisar si los mismos tipeos aparecen en Mid y Low.
+En build_harmonization.py van junto a la lista estática de ignore. Los alias se agregan como extensión manual, porque salen de nombresPosibles.

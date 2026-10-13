@@ -1,0 +1,48 @@
+# ─── Archivo de constraints: Próstata Normofraccionada ───────────────────────
+# Sintaxis de constraints:
+#   V%{dosis}Gy {op} {threshold}     → % volumen que recibe >= dosis Gy   (op: < o >)
+#   DGy{vol}%   {op} {threshold}     → dosis (Gy) recibida por vol% del volumen
+#   DGy{vol}cc  {op} {threshold}     → dosis (Gy) recibida por vol cc del volumen
+#   Dmean       {op} {threshold}     → dosis media (Gy)
+#   Dmax        {op} {threshold}     → dosis máxima (Gy)
+#
+# Las líneas que empiezan con # son comentarios. Las líneas vacías se ignoran.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─── Prescripción de referencia ───────────────────────────────────────────────
+# Solo para validación y normalización. No sobreescribe los valores del plan.
+[Prescripcion]
+DosisTotal_Gy   = 76.0
+NFracciones     = 38
+
+# ─── Estructuras ──────────────────────────────────────────────────────────────
+# Listar todos los alias posibles separados por coma (case-insensitive).
+[Estructuras]
+PTV     = PTV, PTV_High, PTV_High2, PTV_Abr22, PTVp
+Body    = BODY, body, Body, External, Body1, BODY1
+Rectum  = Rectum, RECTUM, rectum
+Bladder = Bladder, BLADDER, bladder
+
+# ─── Constraints por estructura ───────────────────────────────────────────────
+# Formato: {Metrica} {op} {valor}
+# El nombre de sección debe coincidir exactamente con el alias principal definido arriba.
+
+[PTV]
+DGy95%  > 72.2
+DGy100% > 68.4
+V%95Gy  > 95.0
+
+[Rectum]
+V%50Gy  < 50.0
+V%60Gy  < 40.0
+V%65Gy  < 35.0
+V%70Gy  < 25.0
+V%75Gy  < 15.0
+Dmean   < 40.0
+
+[Bladder]
+V%65Gy  < 50.0
+V%70Gy  < 35.0
+V%75Gy  < 25.0
+V%78Gy  < 15.0
+Dmean   < 40.0

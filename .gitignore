@@ -1,0 +1,25 @@
+# --- Compilación / IDE ---
+bin/
+obj/
+.vs/
+packages/
+*.user
+*.suo
+
+# --- DLL de Varian (ESAPI): licencia, no versionar ---
+lib/ESAPI/
+
+# --- Datos de pacientes (HC y apellidos reales) y salidas de minado ---
+# Listas de entrada
+ptta_hipo_todos_sin_LN*.txt
+*pacientes*.csv
+# Salidas de una sesión: el mapping HC <-> AnonID es sensible y nunca va a git
+mapping_ids.csv
+duplicados_descartados.csv
+metadata_planes.csv
+metricas_planes_*.csv
+objetivos_optimizacion.csv
+*.dcm
+
+# --- Config propia de cada PC ---
+config.local.ini
