@@ -235,7 +235,7 @@ namespace DicomExtract
         public bool Metadata { get; set; }
         /// <summary>Sitio de la sesión de minado (CyC, Pelvis, Prostata): parámetro, no se infiere de la dosis.</summary>
         public string Sitio { get; set; }
-        /// <summary>LEGACY próstata: métricas DVH/constraints. Solo corre si EXTRAER_METRICAS_DVH=true en config.ini.</summary>
+        /// <summary>Opción extra (próstata): métricas DVH vs constraints con normalización D95. Requiere ConstraintsPath.</summary>
         public bool Metricas { get; set; }
         public bool Objetivos { get; set; }
         /// <summary>Qué DICOM exportar (CT/RS/RP/RD + anonimizar). Null o !Any = no exportar.</summary>
@@ -268,7 +268,7 @@ namespace DicomExtract
             _totalFlagsCambiados = 0; _casosCambiados.Clear(); _casosPtvSospechoso.Clear();
 
             bool dicom = o.Dicom != null && o.Dicom.Any;
-            bool legacy = o.Metricas && _net.ExtraerMetricasDvh;
+            bool legacy = o.Metricas;
             if (!legacy && !o.Metadata && !o.Objetivos && !dicom) throw new Exception("Nada seleccionado para extraer");
             if (o.Metadata && string.IsNullOrWhiteSpace(o.Sitio)) throw new Exception("Falta el sitio (CyC, Pelvis o Prostata) para la metadata");
 
@@ -305,7 +305,7 @@ namespace DicomExtract
             VMS.TPS.Common.Model.API.Application app, RunOptions o,
             string sessionPath, string mappingPath, string metadataCsvPath, string metricasCsvPath, string objetivosCsvPath)
         {
-            bool legacy = o.Metricas && _net.ExtraerMetricasDvh;
+            bool legacy = o.Metricas;
             bool incluirDicom = o.Dicom != null && o.Dicom.Any;
             bool anonimizar = incluirDicom && o.Dicom.Anonimizar;
             var exporter = new DicomExporter(_net, Log);
@@ -683,22 +683,18 @@ namespace DicomExtract
         }
 
         // ═════════════════════════════════════════════════════════════════════
-        // LEGACY PRÓSTATA — DESACTIVADO por defecto (EXTRAER_METRICAS_DVH=false en config.ini)
+        // MÉTRICAS DVH + NORMALIZACIÓN D95 (opción extra, origen: proyecto de próstata)
         //
-        // POR QUÉ ESTÁ APAGADO: en el proyecto site-agnostic (3 sitios, solo VMAT) el preprocesador
-        // en Python trabaja sobre la grilla de dosis nativa y recalcula desde la RTDOSE cruda el D95,
-        // el factor de normalización, el cumplimiento de constraints, volúmenes y solapamientos.
-        // Extraerlos de ESAPI mezclaría dos fuentes de verdad (grilla de Eclipse vs grilla nativa) y
-        // reintroduce el bug de escala de vóxel. El extractor aporta solo hechos de ARIA (metadata_planes.csv).
+        // Se activa desde la UI ("Métricas DVH + normalización D95") eligiendo un constraints_*.txt
+        // (p.ej. constraints_prostata_hipo.txt). Está APAGADA por defecto. Produce metricas_planes_hipofx_D95norm.csv:
+        // métricas por constraint (V%XGy, DGyX%, DGyXcc, Dmean, Dmax), flags de cumplimiento, FactorNorm_D95/D98,
+        // s_D95, familia _D95norm (renormalización lineal a D95(PTV)=Rx de referencia), volúmenes y solapamientos
+        // PTV–OAR. OJO: ese CSV lleva HC (es de uso interno; nunca a git ni a datasets compartidos).
         //
-        // DE DÓNDE VIENE: proyecto de próstata, donde este CSV (constraints, flags, FactorNorm_D95/D98,
-        // s_D95, familia _D95norm, volúmenes y solapamientos PTV–OAR) era parte del dato que consumía la red.
-        //
-        // PARA QUÉ PODRÍA SERVIR: un proyecto de ML clásico de constraints con features geométricos
-        // acotados (p.ej. mama/DIBH), donde el CSV vuelva a ser dato.
-        //
-        // REACTIVAR: EXTRAER_METRICAS_DVH=true en config.ini (o config.local.ini) y reiniciar la app;
-        // aparece la sección de métricas en la UI. Todo el código sigue compilando; no hay que reescribir nada.
+        // POR QUÉ NO ES LA SALIDA DEL PROYECTO site-agnostic: ahí el preprocesador Python recalcula D95,
+        // normalización, constraints, volúmenes y solapamientos desde la RTDOSE cruda; extraerlos de ESAPI mezclaría
+        // dos fuentes de verdad (grilla de Eclipse vs grilla nativa). Para eso se usa metadata_planes.csv.
+        // Sirve para proyectos donde el CSV de métricas es dato (próstata, ML clásico de constraints, mama/DIBH).
         // Alcance del bloque: ExtraerYGuardarMetricas, ConstruirEncabezadoColumnas, EscribirEncabezadoMetricas,
         // EvaluarMetrica y helpers DVH/geometría, ImprimirResumenD95Norm, ConstraintConfig.
         // ═════════════════════════════════════════════════════════════════════

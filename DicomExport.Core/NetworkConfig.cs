@@ -19,9 +19,6 @@ namespace DicomExport.Core
         /// <summary>Segundos máx. esperando el lock de VMSFD (otro usuario exportando).</summary>
         public int LockTimeoutSeg { get; set; } = 600;
 
-        /// <summary>LEGACY próstata: habilita la extracción de métricas DVH/constraints en DicomExtract (default: apagada).</summary>
-        public bool ExtraerMetricasDvh { get; set; }
-
         /// <summary>true si el ini existía; si no, quedan los valores por defecto.</summary>
         public bool Found { get; private set; }
 
@@ -69,7 +66,6 @@ namespace DicomExport.Core
                     case "ROOT_EXPORT_PATH": cfg.RootExportPath = val; break;
                     case "AE_LOCAL": cfg.AeLocal = val; break;
                     case "IP_LOCAL": cfg.IpLocal = val; break;
-                    case "EXTRAER_METRICAS_DVH": cfg.ExtraerMetricasDvh = val.Equals("true", System.StringComparison.OrdinalIgnoreCase) || val == "1"; break;
                     case "LOCK_TIMEOUT_SEG": if (int.TryParse(val, out n)) cfg.LockTimeoutSeg = n; break;
                 }
             }

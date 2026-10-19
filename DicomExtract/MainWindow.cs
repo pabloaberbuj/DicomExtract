@@ -29,8 +29,8 @@ namespace DicomExtract
         private readonly TextBox _salida = new TextBox();
         private readonly ComboBox _sitio = new ComboBox { MinWidth = 110, ItemsSource = new[] { "CyC", "Pelvis", "Prostata" } };
         private readonly CheckBox _metadata = new CheckBox { Content = "Metadata de plan (CSV: estado, técnica, conteo de versiones…)", IsChecked = true };
-        // LEGACY próstata: solo habilitada con EXTRAER_METRICAS_DVH=true en config.ini
-        private readonly CheckBox _metricas = new CheckBox { Content = "Métricas DVH vs constraints (legacy próstata)", IsChecked = false };
+        // Opción extra (próstata), apagada por defecto: métricas DVH vs constraints con normalización a D95
+        private readonly CheckBox _metricas = new CheckBox { Content = "Métricas DVH + normalización D95 (opcional, próstata)", IsChecked = false };
         private readonly ComboBox _constraints = new ComboBox { IsEditable = true, MinWidth = 320 };
         private readonly CheckBox _objetivos = new CheckBox { Content = "Objetivos de optimización" };
         private readonly CheckBox _anon = new CheckBox { Content = "Anonimizar DICOM", IsChecked = true };
@@ -69,7 +69,7 @@ namespace DicomExtract
             Log(_net.LocalFound ? $"Override local aplicado: {NetworkConfig.LocalIniPath}" : $"Sin override local ({NetworkConfig.LocalIniPath})");
             Log($"AE local {_net.AeLocal}@{_net.IpLocal}");
             Log($"Daemon {_net.AeAria}@{_net.IpDaemon}:{_net.PortDaemon} → AE destino {_net.AeDestino}; VMSFD = {_net.VmsfdPath}");
-            if (_net.ExtraerMetricasDvh && _constraints.Items.Count == 0) Log("[WARN] No se encontró constraints_*.txt junto al exe; elija uno con '…' si usa métricas.");
+            if (_constraints.Items.Count == 0) Log("[WARN] No se encontró constraints_*.txt junto al exe; elija uno con '…' si usa métricas.");
         }
 
         // ─── Construcción de la UI ────────────────────────────────────────────
@@ -128,8 +128,6 @@ namespace DicomExtract
             rowMeta.Children.Add(new TextBlock { Text = "   Sitio de esta sesión: ", VerticalAlignment = VerticalAlignment.Center });
             rowMeta.Children.Add(_sitio);
             pnl.Children.Add(rowMeta);
-            // LEGACY próstata: oculta salvo EXTRAER_METRICAS_DVH=true en config.ini
-            if (!_net.ExtraerMetricasDvh) rowM.Visibility = Visibility.Collapsed;
             pnl.Children.Add(rowM);
             pnl.Children.Add(_objetivos);
 
@@ -233,7 +231,7 @@ namespace DicomExtract
                 CT = _ct.IsChecked == true, RS = _rs.IsChecked == true, RP = _rp.IsChecked == true,
                 RD = _rd.IsChecked == true, Anonimizar = _anon.IsChecked == true
             };
-            bool metricas = _net.ExtraerMetricasDvh && _metricas.IsChecked == true;
+            bool metricas = _metricas.IsChecked == true;
             bool metadata = _metadata.IsChecked == true;
             string error = null;
             if (filas.Count == 0) error = "No hay pacientes.";
